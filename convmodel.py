@@ -82,7 +82,7 @@ def myModel(X, reuse=False):
 
         ### modificamos la siguiente línea para añadirle el nº de clases
         ###h = tf.layers.dense(inputs=tf.reshape(o6, [batch_size * num_classes, 18 * 33 * 64]), units=5, ###
-        h = tf.layers.dense(inputs=tf.reshape(o6, [batch_size * num_classes, 8 * 15 * 128]), units=20,
+        h = tf.layers.dense(inputs=tf.reshape(o6, [batch_size * num_classes, 12 * 20 * 64]), units=5, ###
                             activation=tf.nn.relu)
         y = tf.layers.dense(inputs=h, units=num_classes, activation=tf.nn.softmax)
     return y
@@ -124,50 +124,6 @@ with tf.Session() as sess:
     # Start populating the filename queue.
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord, sess=sess)
-    """
-    error_valid = 0 ### error de validacion
-    errors_valid = []  ###
-    previousError = 9999
-    for epoch in range(430):  # 430
-        sess.run(optimizer)
-        error_valid = sess.run(cost_valid)
-        errors_valid.append(error_valid)
-        if epoch != 0: previousError = errors_valid[len(errors_valid) - 2]
-        if epoch % 20 == 0:
-            print("Iter:", epoch, "---------------------------------------------")
-            print(sess.run(label_batch_train))
-            print(sess.run(example_batch_train_predicted))
-            print("Error:", error_valid)
-            print("Error:", sess.run(cost))
-
-        if np.absolute(error_valid - previousError) < (0.01):
-            epoh = epoch
-            break
-
-    print("Final Epoch: ", epoh)
-
-    plt.plot(errors_valid)
-    plt.show()
-
-    bad = 0
-    re = []
-    la = []
-    cuenta = 0
-    for epoch in range(9):
-        result = sess.run(example_batch_test_predicted)
-        lab = sess.run(label_batch_test)
-        cuenta += len(lab)
-        re.extend(result)
-        la.extend(lab)
-    for b, r in zip(la, re):
-        if np.argmax(b) != np.argmax(r):
-            print(b, "-->", r, " *** Se ha clasificado mal")
-            bad = bad + 1
-        else:
-            print(b, "-->", r, " *** Se ha clasificado bien")
-
-    print("\nSe han clasificado mal", bad, "muestras de", cuenta, ".")
-    """
 
     control = True
     epoch = 0
@@ -186,7 +142,7 @@ with tf.Session() as sess:
             print("Error:", error_valid)
             print("Error:", sess.run(cost))
 
-        if error_prev - error_valid < 0.001:
+        if error_prev - error_valid < 0.005:
             control = False
         else:
             previousError = errors_valid[len(errors_valid) - 2]
