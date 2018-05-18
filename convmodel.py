@@ -20,7 +20,10 @@ def one_hot(x, n):
 
 
 num_classes = 3
-batch_size = 10
+batch_size = 10  ### <---
+
+
+### batch_size = 4
 
 
 # --------------------------------------------------
@@ -41,7 +44,7 @@ def dataSource(paths, batch_size):
     ### paths son las rutas de ficheros
     ### enumerate, enumera las listas del fichero
     for i, p in enumerate(paths):
-         ###-- apertura de ficheros
+        ###-- apertura de ficheros
         filename = tf.train.match_filenames_once(p)
         filename_queue = tf.train.string_input_producer(filename, shuffle=False)
         reader = tf.WholeFileReader()
@@ -77,12 +80,12 @@ def myModel(X, reuse=False):
         o2 = tf.layers.max_pooling2d(inputs=o1, pool_size=2, strides=2)
         o3 = tf.layers.conv2d(inputs=o2, filters=64, kernel_size=3, activation=tf.nn.relu)
         o4 = tf.layers.max_pooling2d(inputs=o3, pool_size=2, strides=2)
-        o5 = tf.layers.conv2d(inputs=o4, filters=128, kernel_size=3, activation=tf.nn.relu)
-        o6 = tf.layers.max_pooling2d(inputs=o5, pool_size=2, strides=2)
+        o5 = tf.layers.conv2d(inputs=o4, filters=128, kernel_size=3, activation=tf.nn.relu)  ### <---
+        o6 = tf.layers.max_pooling2d(inputs=o5, pool_size=2, strides=2)  ### <---
 
         ### modificamos la siguiente línea para añadirle el nº de clases
-        ###h = tf.layers.dense(inputs=tf.reshape(o6, [batch_size * num_classes, 18 * 33 * 64]), units=5, ###
-        h = tf.layers.dense(inputs=tf.reshape(o6, [batch_size * num_classes, 12 * 20 * 64]), units=5, ###
+        # h = tf.layers.dense(inputs=tf.reshape(o4, [batch_size * num_classes, 18 * 33 * 64]), units=5,
+        h = tf.layers.dense(inputs=tf.reshape(o6, [batch_size * num_classes, 12 * 20 * 64]), units=5,  ### <---
                             activation=tf.nn.relu)
         y = tf.layers.dense(inputs=h, units=num_classes, activation=tf.nn.softmax)
     return y
@@ -102,9 +105,21 @@ example_batch_test_predicted = myModel(example_batch_test, reuse=True)
 
 cost = tf.reduce_sum(tf.square(example_batch_train_predicted - tf.cast(label_batch_train, tf.float32)))
 cost_valid = tf.reduce_sum(tf.square(example_batch_valid_predicted - tf.cast(label_batch_valid, tf.float32)))
+cost_test = tf.reduce_sum(tf.square(example_batch_test_predicted - tf.cast(label_batch_test, dtype=tf.float32)))
 ###-- Descenso del gradiente --###
 ### cuanto más pequeño el learning_rate, más lento aprende pero más seguro
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001).minimize(cost)
+
+y_true = tf.placeholder(tf.float32, [None, 3])  # etiquetas
+y = tf.placeholder(tf.float32, [None, 3])  # etiquetas
+# a partir del elemento mayor de cada fila
+y_sup = tf.argmax(y, 1)
+y_true_max = tf.argmax(y_true, 1)
+# comprobamos si las etiquetas sup y la true son iguales en un vector
+correct_prediction = tf.equal(y_sup, y_true_max)
+# para comprobar, pasamos booleamos a fraccion y calculamos la media
+precision = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
 # --------------------------------------------------
 #
 #       TRAINING
@@ -146,6 +161,19 @@ with tf.Session() as sess:
             control = False
         else:
             previousError = errors_valid[len(errors_valid) - 2]
+
+    # --------------------------------------------------
+    #
+    #       TESTING
+    #
+    # --------------------------------------------------
+    print("-----------------------")
+    print("   Empieza el test...  ")
+    print("-----------------------")
+
+    print("Error de test: ", sess.run(cost_test))
+    percent = sess.run(precision, feed_dict={y: example_batch_test_predicted.eval(), y_true: label_batch_test.eval()}) * 100
+    print("Precisión de test (%): ", percent)
 
     plt.plot(errors_valid)
     plt.show()
