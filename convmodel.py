@@ -15,7 +15,7 @@ def one_hot(x, n):
 
     """ ponemos todo el vector a cero y metemos un 1 en la posicion x"""
     o_h = np.zeros(n)
-    o_h[x] = 1.
+    o_h[x] = 1
     return o_h
 
 
